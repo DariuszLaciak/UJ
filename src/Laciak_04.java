@@ -1,101 +1,67 @@
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.Map.Entry;
-
-
-import java.util.Set;
-import java.util.TreeMap;
 
 class BetterOtelloHelper implements BetterOtelloHelperInterface {
     private Disk[][] firstBoard;
 
-    public static void main(String[] args) {
-        Disk[][] board = new Disk[8][8];
-        Disk player = Disk.BLACK;
-
-        int y = 0;
-        for (Disk[] board1 : board) {
-            int x = 0;
-            for (Disk d : board1) {
-                board[x][y] = Disk.WHITE;
-                x++;
-            }
-            y++;
-        }
-        board[3][4] = Disk.BLACK;
-        board[0][0] = null;
-        board[0][7] = null;
-        board[7][0] = null;
-        board[7][7] = null;
-
-//        board[3][3] = Disk.BLACK;
-//        board[4][4] = Disk.BLACK;
-//        board[3][4] = Disk.WHITE;
-//        board[4][3] = Disk.WHITE;
-
-        BetterOtelloHelper boh = new BetterOtelloHelper();
-        BetterOtelloHelper.printBoard(board);
-//		for (Position p : boh.analyze_old(board, player)) {
-//			System.out.println(p.getIndex1() + " " + p.getIndex2());
-//		}
-        Map<Integer, Set<List<Position>>> res = boh.analyze(board, player);
-//        for (Entry<Integer, Set<List<Position>>> entry : res.entrySet()) {
-//            System.out.print("\n" + entry.getKey() + ": ");
-//            for (List<Position> list : entry.getValue()) {
-//                System.out.print("{");
-//                for (Position p : list) {
-//                    System.out.print("[" + p.getIndex1() + ", " + p.getIndex2() + "]");
-//                }
-//                System.out.print("} ");
-//            }
-//        }
-    }
-
     @Override
     public Map<Integer, Set<List<Position>>> analyze(Disk[][] board, Disk playerDisk) {
         firstBoard = makeCopy(board);
-        Map<Integer, Set<List<Position>>> result = new TreeMap<>();
+        Map<Integer, Set<List<Position>>> result = new TreeMap<>(Collections.reverseOrder());
         Position[] firstIteration = analyze_old(board,playerDisk);
         Map<Position,List<Position>> res;
         for(Position p : firstIteration){
             board = makeCopy(firstBoard);
             res = new HashMap<>();
             res.put(p,new ArrayList<>());
+            int pointsBeforeTree = getResult(board,playerDisk);
             res = checkTreeResult(p,board,playerDisk,res);
-
-            System.out.println("["+p.getIndex1() + ", " + p.getIndex2()+"] =>");
             List<Position> tempList = new ArrayList<>();
+            Set<List<Position>> results = new HashSet<>();
+
             for(Entry<Position,List<Position>> entry: res.entrySet()){
-                if(entry.getValue().size() > tempList.size()){
+                if(arePointsInTreeAlready(tempList,entry.getValue())){
                     tempList = entry.getValue();
                 }
-
             }
-            for(Position po : tempList){
-                System.out.print("["+po.getIndex1()+","+po.getIndex2()+"] ");
-            }
-            System.out.println();
+            int pointsAfterTree = getResult(board,playerDisk);
+            int pointsGot = pointsAfterTree - pointsBeforeTree - 1;
 
+            results.add(tempList);
+            for(List<Position> list : results) {
+                if(result.containsKey(pointsGot)){
+                    list.add(0,p);
+                    result.get(pointsGot).add(list);
+                }
+                else {
+                    Set<List<Position>> set = new HashSet<>();
+                    list.add(0,p);
+                    set.add(list);
+                    result.put(pointsGot,set);
+                }
+            }
         }
 
         return result;
     }
 
-    private boolean arePointsInTreeAlready(List<Position> pointsToCheck, List<Position> list){
+    private boolean arePointsInTreeAlready( List<Position>  pointsToCheck, List<Position> list){
+        int expectedMatch = pointsToCheck.size();
+        int actual = 0;
         boolean contains = false;
-        for(Position p1 : pointsToCheck){
-            if(list.contains(p1)){
 
+        for(Position p1 : list){
+            for(Position p2 : pointsToCheck){
+                if(p1.getIndex1() == p2.getIndex1() && p1.getIndex2() == p2.getIndex2()){
+                    actual++;
+                }
             }
         }
 
-        return (list.containsAll(pointsToCheck));
+        if(actual == expectedMatch)
+            contains = true;
+
+        return contains;
     }
 
     private Disk[][] makeCopy(Disk[][] board){
@@ -106,6 +72,17 @@ class BetterOtelloHelper implements BetterOtelloHelperInterface {
                 copy[i][j]=board[i][j];
 
         return copy;
+    }
+
+    public int getResult(Disk[][] board, Disk player) {
+        int result = 0;
+        for(Disk[] y : board){
+            for(Disk x : y){
+                if(x== player)
+                    result++;
+            }
+        }
+        return result;
     }
 
     private Map<Position,List<Position>> checkTreeResult(Position p, Disk[][] board, Disk player,Map<Position,List<Position>> result){
@@ -374,50 +351,6 @@ class BetterOtelloHelper implements BetterOtelloHelperInterface {
             }
         }
     }
-
-    class TreeNode<T> implements Iterable<TreeNode<T>> {
-
-        T data;
-        TreeNode<T> parent;
-        List<TreeNode<T>> children;
-
-        public TreeNode(T data) {
-            this.data = data;
-            this.children = new LinkedList<TreeNode<T>>();
-        }
-
-        public TreeNode<T> addChild(T child) {
-            TreeNode<T> childNode = new TreeNode<T>(child);
-            childNode.parent = this;
-            this.children.add(childNode);
-            return childNode;
-        }
-
-
-        @Override
-        public Iterator<TreeNode<T>> iterator() {
-            Iterator<TreeNode<T>> iterator = new Iterator<TreeNode<T>>(
-            ) {
-                @Override
-                public boolean hasNext() {
-                    if(parent.children.size() == 0)
-                        return false;
-                    else
-                        return true;
-                }
-
-                @Override
-                public TreeNode<T> next() {
-                    return parent.children.get(0);
-                }
-            };
-            return iterator;
-        }
-
-        // other features ...
-
-    }
-
 }
 
 interface BetterOtelloHelperInterface {
