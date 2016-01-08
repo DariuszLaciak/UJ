@@ -15,6 +15,8 @@ class BetterOtelloHelper implements BetterOtelloHelperInterface {
             res = new HashMap<>();
             res.put(p,new ArrayList<>());
             int pointsBeforeTree = getResult(board,playerDisk);
+            int nullsBefore = getResult(board,null);
+
             res = checkTreeResult(p,board,playerDisk,res);
             List<Position> tempList = new ArrayList<>();
             Set<List<Position>> results = new HashSet<>();
@@ -25,7 +27,8 @@ class BetterOtelloHelper implements BetterOtelloHelperInterface {
                 }
             }
             int pointsAfterTree = getResult(board,playerDisk);
-            int pointsGot = pointsAfterTree - pointsBeforeTree - 1;
+            int nullsAfter = getResult(board,null);
+            int pointsGot = pointsAfterTree - pointsBeforeTree - (nullsBefore - nullsAfter);
 
             results.add(tempList);
             for(List<Position> list : results) {

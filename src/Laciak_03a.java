@@ -15,11 +15,11 @@ class ReversiBoard implements ReversiBoardInterface{
 	
 	public ReversiBoard(){}
 
-	
 	@Override
 	public void setGameState(Disk[][] board, Disk nextPlayer) {
 		this.board = board;
 		this.player = nextPlayer;
+		this.playerMoved = false;
 	}
 
 	@Override
@@ -45,6 +45,7 @@ class ReversiBoard implements ReversiBoardInterface{
 				else {
 					Disk player = (this.player == Disk.BLACK) ? Disk.WHITE : Disk.BLACK;
 					this.player = player;
+					playerMoved = false;
 				}
 			}
 		}
