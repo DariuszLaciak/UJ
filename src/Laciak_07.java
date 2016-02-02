@@ -8,98 +8,17 @@ import java.util.function.BooleanSupplier;
 class AnyAlgorithm implements AnyAlgorithmInterface {
     private ExecutionListInterface list;
 
-    public static void main(String[] args){
-        Runnable pracaA_R = new Runnable() {
-            @Override
-            public void run() {
-                System.out.println("=====================");
-                System.out.println("Praca A");
-            }
-        };
-        Runnable pracaB1True_R = new Runnable() {
-            @Override
-            public void run() {
-                System.out.println("Praca B1 True");
-            }
-        };
-        Runnable pracaB2True_R = new Runnable() {
-            @Override
-            public void run() {
-                System.out.println("Praca B2 True");
-            }
-        };
-        Runnable pracaB1False_R = new Runnable() {
-            @Override
-            public void run() {
-                System.out.println("Praca B1 False");
-            }
-        };
-        Runnable pracaB2False_R = new Runnable() {
-            @Override
-            public void run() {
-                System.out.println("Praca B2 False");
-            }
-        };
-        Runnable pracaC_R = new Runnable() {
-            @Override
-            public void run() {
-                System.out.println("Praca C");
-            }
-        };
-        final int[] iter = {0};
-        BooleanSupplier warunekB_C = new BooleanSupplier() {
-            @Override
-            public boolean getAsBoolean() {
-                if(iter[0] % 2 == 0){
-                    return true;
-                }
-                else
-                    return false;
-            }
-        };
 
-        BooleanSupplier warunekD_C = new BooleanSupplier() {
-            @Override
-            public boolean getAsBoolean() {
-                iter[0]++;
-                if( iter[0] < 5){
-                    return true;
-                }
-                else
-                    return false;
-            }
-        };
-        AnyAlgorithm aa = new AnyAlgorithm();
-        ExecutionList listaB12True = aa.createList();
-        listaB12True.add(pracaB1True_R);
-        listaB12True.add(pracaB2True_R);
-        ExecutionList listaB12False = aa.createList();
-        listaB12False.add(pracaB2False_R);
-        listaB12False.add(pracaB1False_R);
-        Fork forkB12 = aa.createFork();
-        forkB12.set(warunekB_C);
-        forkB12.setFalseBranch(listaB12False);
-        forkB12.setTrueBranch(listaB12True);
-        ExecutionList listaABC = aa.createList();
-        listaABC.add(pracaA_R);
-        listaABC.add(forkB12);
-        listaABC.add(pracaC_R);
-        Loop loop = aa.createLoop();
-        loop.set(warunekD_C,false);
-        loop.set(listaABC);
-        loop.start();
-
-    }
-
-    private ExecutionList createList(){
+    public ExecutionList createList(){
         return new ExecutionList();
     }
 
-    private Fork createFork(){
+    public Fork createFork(){
         return new Fork();
     }
 
-    private Loop createLoop(){
+
+    public Loop createLoop(){
         return new Loop();
     }
 
@@ -144,12 +63,15 @@ class AnyAlgorithm implements AnyAlgorithmInterface {
         @Override
         public void start() {
             for(Object o : objects){
-                if(o instanceof Runnable){
-                    ((Runnable) o).run();
+                if(o != null){
+                    if(o instanceof Runnable){
+                        ((Runnable) o).run();
+                    }
+                    else {
+                        ((ExecutableInterface) o).start();
+                    }
                 }
-                else {
-                    ((ExecutableInterface) o).start();
-                }
+
             }
         }
     }
@@ -158,6 +80,11 @@ class AnyAlgorithm implements AnyAlgorithmInterface {
         private ExecutionListInterface list;
         private BooleanSupplier continuationCondition;
         private boolean preFlag;
+
+        public Loop(){
+            continuationCondition = () -> false;
+            preFlag = false;
+        }
 
         @Override
         public void set(ExecutionListInterface list) {
@@ -191,6 +118,9 @@ class AnyAlgorithm implements AnyAlgorithmInterface {
         private ExecutionListInterface trueList;
         private ExecutionListInterface falseList;
 
+        public Fork(){
+            forkCondition = () -> false;
+        }
         @Override
         public void set(BooleanSupplier forkCondition) {
             this.forkCondition = forkCondition;
@@ -216,4 +146,105 @@ class AnyAlgorithm implements AnyAlgorithmInterface {
             }
         }
     }
+}
+
+interface AnyAlgorithmInterface extends ExecutableInterface {
+
+    /**
+     * Interfejs budowy listy polecen do wykonania. W sklad
+     * listy moga wchodzic inne listy, petle, rozgalezienia i
+     * obiekty Runnable. Nazwa ExecutionList zostala wprowadzona
+     * w celu unikniecia problemow z interfejsem List.
+     */
+    interface ExecutionListInterface extends ExecutableInterface {
+        /**
+         * Dodanie jednej operacji do wykonania.
+         * @param run obiekt zgodny z interfejsem Runnable
+         */
+        void add( Runnable run );
+
+        /**
+         * Dodaje liste operacji do wykonania.
+         * @param list lista operacji do wykonania
+         */
+        void add( ExecutionListInterface list );
+
+        /**
+         * Dodaje petle.
+         * @param loop petla do wykonania
+         */
+        void add( LoopInterface loop );
+
+        /**
+         * Dodaje operacje warunkowa.
+         * @param fork operacja do wykonania
+         */
+        void add( ForkInterface fork );
+    }
+
+    /**
+     * Interfejs budowy petli. Petla sklada sie z listy
+     * operacji do wykonania i warunku kontynuacji.
+     * Warunek sprawdzany jest przed lub po kazdorazowym wykonaniu
+     * kompletu operacji nalezacych do listy.
+     */
+    interface LoopInterface extends ExecutableInterface {
+        /**
+         * Ustawia liste operacji do wykonania w petli.
+         * @param list lista operacji do wykonania
+         */
+        void set( ExecutionListInterface list );
+
+        /**
+         * Ustawia warunek kontynuacji.
+         * @param continuationCondition obiekt zgodny z interfejsem funkcyjnym
+         * BooleanSupplier. Prawda logiczna oznacza, ze dzialanie petli ma byc
+         * kontynuowane.
+         * @param preFlag flaga okreslajaca czy warunek ma byc sprawdzany
+         * przed wykonaniem listy operacji (true) czy po jej wykonaniu (false).
+         */
+        void set( BooleanSupplier continuationCondition, boolean preFlag );
+    }
+
+    /**
+     * Interfejs budowy rozgalezienia. Elementami
+     * skladowymi sa warunek wyboru sciezki wykonania oraz
+     * listy operacji do wykonania w przypadku
+     * wyboru danej sciezki. Warunek sprawdzany jest jako
+     * pierwszy - od uzyskanego wyniku zalezy, ktora
+     * z dwoch sciezek zostanie wybrana.
+     */
+    interface ForkInterface extends ExecutableInterface {
+        /**
+         * Ustawia warunek, ktory zostanie uzyty do podjecia decyzji,
+         * ktora z galezi bedzie realizowana.
+         * @param forkCondition warunek
+         */
+        void set( BooleanSupplier forkCondition );
+        /**
+         * Lista operacji do realizacji jesli warunek okaze sie prawda.
+         * @param list lista operacji do wykonania dla prawdy
+         */
+        void setTrueBranch( ExecutionListInterface list );
+
+        /**
+         * Lista operacji do realizacji jesli warunek okaze sie falszem.
+         * @param list lista operacji do wykonania w przypadku falszu
+         */
+        void setFalseBranch( ExecutionListInterface list );
+    }
+
+    /**
+     * Ustawia liste polecen do wykonania.
+     *
+     * @param list - lista polecen do wykonania
+     */
+    void setList( ExecutionListInterface list );
+}
+
+interface ExecutableInterface {
+    /**
+     * Metoda zleca rozpoczecie wykonania.
+     */
+    void start();
 }
