@@ -12,49 +12,61 @@ class AnyAlgorithm implements AnyAlgorithmInterface {
         Runnable pracaA_R = new Runnable() {
             @Override
             public void run() {
-
+                System.out.println("=====================");
+                System.out.println("Praca A");
             }
         };
         Runnable pracaB1True_R = new Runnable() {
             @Override
             public void run() {
-
+                System.out.println("Praca B1 True");
             }
         };
         Runnable pracaB2True_R = new Runnable() {
             @Override
             public void run() {
-
+                System.out.println("Praca B2 True");
             }
         };
         Runnable pracaB1False_R = new Runnable() {
             @Override
             public void run() {
-
+                System.out.println("Praca B1 False");
             }
         };
         Runnable pracaB2False_R = new Runnable() {
             @Override
             public void run() {
-
+                System.out.println("Praca B2 False");
             }
         };
         Runnable pracaC_R = new Runnable() {
             @Override
             public void run() {
-
+                System.out.println("Praca C");
             }
         };
+        final int[] iter = {0};
         BooleanSupplier warunekB_C = new BooleanSupplier() {
             @Override
             public boolean getAsBoolean() {
-                return false;
+                if(iter[0] % 2 == 0){
+                    return true;
+                }
+                else
+                    return false;
             }
         };
+
         BooleanSupplier warunekD_C = new BooleanSupplier() {
             @Override
             public boolean getAsBoolean() {
-                return false;
+                iter[0]++;
+                if( iter[0] < 5){
+                    return true;
+                }
+                else
+                    return false;
             }
         };
         AnyAlgorithm aa = new AnyAlgorithm();
@@ -62,18 +74,18 @@ class AnyAlgorithm implements AnyAlgorithmInterface {
         listaB12True.add(pracaB1True_R);
         listaB12True.add(pracaB2True_R);
         ExecutionList listaB12False = aa.createList();
-        listaB12False.add(pracaB1False_R);
         listaB12False.add(pracaB2False_R);
+        listaB12False.add(pracaB1False_R);
         Fork forkB12 = aa.createFork();
         forkB12.set(warunekB_C);
         forkB12.setFalseBranch(listaB12False);
         forkB12.setTrueBranch(listaB12True);
         ExecutionList listaABC = aa.createList();
-        listaABC.add(forkB12);
         listaABC.add(pracaA_R);
+        listaABC.add(forkB12);
         listaABC.add(pracaC_R);
         Loop loop = aa.createLoop();
-        loop.set(warunekD_C,true);
+        loop.set(warunekD_C,false);
         loop.set(listaABC);
         loop.start();
 
@@ -98,43 +110,46 @@ class AnyAlgorithm implements AnyAlgorithmInterface {
 
     @Override
     public void start() {
-
+        if(list != null)
+            list.start();
     }
 
     public class ExecutionList implements ExecutionListInterface{
-        private List<Runnable> run;
-        private ExecutionListInterface list;
-        private LoopInterface loop;
-        private ForkInterface fork;
+        private List<Object> objects;
 
         public ExecutionList(){
-            this.run = new ArrayList<>();
+            objects = new ArrayList<>();
         }
 
         @Override
         public void add(Runnable run) {
-            this.run.add(run);
+            objects.add(run);
         }
 
         @Override
         public void add(ExecutionListInterface list) {
-            this.list = list;
+            objects.add(list);
         }
 
         @Override
         public void add(LoopInterface loop) {
-            this.loop = loop;
+            objects.add(loop);
         }
 
         @Override
         public void add(ForkInterface fork) {
-            this.fork = fork;
+            objects.add(fork);
         }
 
         @Override
         public void start() {
-            if(loop != null){
-                loop.start();
+            for(Object o : objects){
+                if(o instanceof Runnable){
+                    ((Runnable) o).run();
+                }
+                else {
+                    ((ExecutableInterface) o).start();
+                }
             }
         }
     }
