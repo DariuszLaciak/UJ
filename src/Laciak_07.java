@@ -1,3 +1,5 @@
+import java.util.ArrayList;
+import java.util.List;
 import java.util.function.BooleanSupplier;
 
 /**
@@ -5,6 +7,89 @@ import java.util.function.BooleanSupplier;
  */
 class AnyAlgorithm implements AnyAlgorithmInterface {
     private ExecutionListInterface list;
+
+    public static void main(String[] args){
+        Runnable pracaA_R = new Runnable() {
+            @Override
+            public void run() {
+
+            }
+        };
+        Runnable pracaB1True_R = new Runnable() {
+            @Override
+            public void run() {
+
+            }
+        };
+        Runnable pracaB2True_R = new Runnable() {
+            @Override
+            public void run() {
+
+            }
+        };
+        Runnable pracaB1False_R = new Runnable() {
+            @Override
+            public void run() {
+
+            }
+        };
+        Runnable pracaB2False_R = new Runnable() {
+            @Override
+            public void run() {
+
+            }
+        };
+        Runnable pracaC_R = new Runnable() {
+            @Override
+            public void run() {
+
+            }
+        };
+        BooleanSupplier warunekB_C = new BooleanSupplier() {
+            @Override
+            public boolean getAsBoolean() {
+                return false;
+            }
+        };
+        BooleanSupplier warunekD_C = new BooleanSupplier() {
+            @Override
+            public boolean getAsBoolean() {
+                return false;
+            }
+        };
+        AnyAlgorithm aa = new AnyAlgorithm();
+        ExecutionList listaB12True = aa.createList();
+        listaB12True.add(pracaB1True_R);
+        listaB12True.add(pracaB2True_R);
+        ExecutionList listaB12False = aa.createList();
+        listaB12False.add(pracaB1False_R);
+        listaB12False.add(pracaB2False_R);
+        Fork forkB12 = aa.createFork();
+        forkB12.set(warunekB_C);
+        forkB12.setFalseBranch(listaB12False);
+        forkB12.setTrueBranch(listaB12True);
+        ExecutionList listaABC = aa.createList();
+        listaABC.add(forkB12);
+        listaABC.add(pracaA_R);
+        listaABC.add(pracaC_R);
+        Loop loop = aa.createLoop();
+        loop.set(warunekD_C,true);
+        loop.set(listaABC);
+        loop.start();
+
+    }
+
+    private ExecutionList createList(){
+        return new ExecutionList();
+    }
+
+    private Fork createFork(){
+        return new Fork();
+    }
+
+    private Loop createLoop(){
+        return new Loop();
+    }
 
     @Override
     public void setList(ExecutionListInterface list) {
@@ -17,14 +102,18 @@ class AnyAlgorithm implements AnyAlgorithmInterface {
     }
 
     public class ExecutionList implements ExecutionListInterface{
-        private Runnable run;
+        private List<Runnable> run;
         private ExecutionListInterface list;
         private LoopInterface loop;
         private ForkInterface fork;
 
+        public ExecutionList(){
+            this.run = new ArrayList<>();
+        }
+
         @Override
         public void add(Runnable run) {
-            this.run = run;
+            this.run.add(run);
         }
 
         @Override
