@@ -1,7 +1,11 @@
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Collectors;
 
-class ToDoLists implements ToDoListsInterface{
+class ToDoListsExt implements ToDoListsExtInterface {
+
     List<ToDoList> lists = new ArrayList<>();
     int prevId = 0;
 
@@ -31,7 +35,12 @@ class ToDoLists implements ToDoListsInterface{
     public List<String> getItems(String listName) throws DoesNotExistException {
         ToDoList list = getListByName(listName);
         List<Item> items = list.getItems();
-        return items.stream().map(Item::getName).collect(Collectors.toList());
+        List<Item> combinedItems = new ArrayList<>();
+        combinedItems.addAll(items);
+        for(ToDoList connectedLists : list.getConnectedLists()){
+            combinedItems.addAll(connectedLists.getItems());
+        }
+        return combinedItems.stream().map(Item::getName).collect(Collectors.toList());
     }
 
     @Override
@@ -80,10 +89,12 @@ class ToDoLists implements ToDoListsInterface{
     class ToDoList{
         private String name;
         private List<Item> items;
+        private List<ToDoList> connectedLists;
 
         public ToDoList(String name){
             this.name = name;
             items = new ArrayList<>();
+            connectedLists = new ArrayList<>();
         }
 
         public void addItem(String item) throws AlreadyExistsException{
@@ -94,6 +105,10 @@ class ToDoLists implements ToDoListsInterface{
             }
             Item newItem = new Item(item,generateNextId());
             items.add(newItem);
+        }
+
+        public void connectList(ToDoList list){
+            connectedLists.add(list);
         }
 
         public List<Item> getItems(){
@@ -111,6 +126,10 @@ class ToDoLists implements ToDoListsInterface{
                 }
             }
             throw new DoesNotExistException();
+        }
+
+        public List<ToDoList> getConnectedLists(){
+            return connectedLists;
         }
     }
 
@@ -137,8 +156,48 @@ class ToDoLists implements ToDoListsInterface{
             state = ItemState.CHECKED;
         }
 
+        public void setUnChecked(){
+            state = ItemState.UNCHECKED;
+        }
+
         public ItemState getState(){
             return state;
         }
+
+        public boolean isChecked(){
+            return state == ItemState.CHECKED;
+        }
+    }
+
+
+    @Override
+    public void connectListToList(String listNameSrc, String listNameDst) throws DoesNotExistException {
+        ToDoList src = getListByName(listNameSrc);
+        ToDoList dst = getListByName(listNameDst);
+        if(!src.equals(dst))
+            dst.connectList(src);
+    }
+    @Override
+    public void uncheckItem(Integer itemID) throws DoesNotExistException {
+        Item i = getItemById(itemID);
+        i.setUnChecked();
+    }
+
+    @Override
+    public boolean allChecked(String listName) throws DoesNotExistException {
+        ToDoList list = getListByName(listName);
+        for(Item i : list.getItems()){
+            if(!i.isChecked()){
+                return false;
+            }
+        }
+        for(ToDoList connected : list.getConnectedLists()){
+            for(Item i : connected.getItems()){
+                if(!i.isChecked()){
+                    return false;
+                }
+            }
+        }
+        return true;
     }
 }
