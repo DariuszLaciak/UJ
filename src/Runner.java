@@ -4,12 +4,15 @@ import java.util.function.BooleanSupplier;
  * Created by Dariusz on 2016-02-02.
  */
 public class Runner {
-    private static final int TASK_NO = 7;
+    private static final int TASK_NO = 8;
 
     public static void main(String[] args){
         switch(TASK_NO){
             case 7:
                 zad7();
+                break;
+            case 8:
+                zad8();
                 break;
         }
 
@@ -63,4 +66,23 @@ public class Runner {
         loop.set(listaABC);
         loop.start();
     }
+
+    private static void zad8(){
+        SQLiteHelper sql = new SQLiteHelper();
+        TestZad8 test = new TestZad8();
+
+        System.out.println("create: \n"+sql.createTable(test));
+        System.out.println("insert: \n"+sql.insert(test));
+    }
+}
+
+class TestZad8{
+    public String textSQL = "TextSQL";
+    public int integerSQL = 10;
+    public boolean boolSQL = true;
+    public float realSQL = 0.45F;
+    private String test1 = "Test1";
+    boolean test2 = false;
+    public Runnable runTest = null;
+    public String fal = "false";
 }
