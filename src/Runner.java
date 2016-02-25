@@ -1,10 +1,15 @@
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.List;
 import java.util.function.BooleanSupplier;
 
 /**
  * Created by Dariusz on 2016-02-02.
  */
 public class Runner {
-    private static final int TASK_NO = 9;
+    private static final int TASK_NO = 10;
 
     public static void main(String[] args){
         switch(TASK_NO){
@@ -16,6 +21,9 @@ public class Runner {
                 break;
             case 9:
                 zad9();
+                break;
+            case 10:
+                zad10();
                 break;
         }
 
@@ -104,13 +112,42 @@ public class Runner {
             e.printStackTrace();
         }
     }
+
+    private static void zad10() {
+        SQLiteHelperExt slhe = new SQLiteHelperExt();
+        Connection con = null;
+        Statement st;
+        try {
+            Class.forName("org.sqlite.JDBC");
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+        try {
+            con = DriverManager.getConnection("jdbc:sqlite:/tmp/sample.db");
+            st = con.createStatement();
+            st.executeUpdate("DROP TABLE IF EXISTS TestZad8;");
+            st.executeUpdate("CREATE TABLE IF NOT EXISTS TestZad8(fal TEXT, realSQL REAL, textSQL TEXT, integerSQL INTEGER, boolSQL INTEGER);");
+            st.executeUpdate("INSERT INTO TestZad8 (fal, realSQL, textSQL, integerSQL, boolSQL) VALUES ('false', 0.45, 'TextSQL', 10, 1);");
+            st.executeUpdate("INSERT INTO TestZad8 (fal, realSQL, textSQL, integerSQL, boolSQL) VALUES ('true', 1.45, '112TextSQL', 120, 0);");
+            st.executeUpdate("INSERT INTO TestZad8 (fal, realSQL, textSQL, integerSQL, boolSQL) VALUES ('razdwa', 0, 'TextSQL1', 0, 1);");
+            st.executeUpdate("INSERT INTO TestZad8 (fal, realSQL, textSQL, integerSQL, boolSQL) VALUES ('mniam', -44.45, 'costakiego', -10, 0);");
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        List<Object> klasa1 = slhe.select(con, "TestZad8");
+        for(Object o : klasa1){
+            TestZad8 test = (TestZad8)o;
+            System.out.println("boolSQL: "+test.boolSQL+", integerSQL: "+test.integerSQL+", textSQL: "+test.textSQL+
+            ", realSQL: "+test.realSQL+", fal: "+test.fal);
+        }
+    }
 }
 
 class TestZad8{
     public String textSQL = "TextSQL";
     public int integerSQL = 10;
-    public boolean boolSQL = true;
-    public float realSQL = 0.45F;
+    public Boolean boolSQL = true;
+    public Float realSQL = 0.45F;
     private String test1 = "Test1";
     boolean test2 = false;
     public Runnable runTest = null;
