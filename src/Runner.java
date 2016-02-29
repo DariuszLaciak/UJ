@@ -1,7 +1,10 @@
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.function.BooleanSupplier;
 
@@ -9,7 +12,7 @@ import java.util.function.BooleanSupplier;
  * Created by Dariusz on 2016-02-02.
  */
 public class Runner {
-    private static final int TASK_NO = 10;
+    private static final int TASK_NO = 12;
 
     public static void main(String[] args){
         switch(TASK_NO){
@@ -24,6 +27,12 @@ public class Runner {
                 break;
             case 10:
                 zad10();
+                break;
+            case 11:
+                zad11();
+                break;
+            case 12:
+                zad9();
                 break;
         }
 
@@ -90,15 +99,21 @@ public class Runner {
         try {
             tdle.createToDoList("nowa1");
             tdle.createToDoList("nowa2");
+            tdle.createToDoList("nowa3");
             tdle.addItemToList("przemiot","nowa1");
             tdle.addItemToList("przemiot2","nowa1");
             tdle.addItemToList("przemiot3","nowa2");
+            tdle.addItemToList("przedmiot_nowy","nowa3");
             tdle.connectListToList("nowa2", "nowa1");
             tdle.addItemToList("przemiot4","nowa1");
+            tdle.connectListToList("nowa3","nowa2");
+            tdle.connectListToList("nowa1","nowa3");
+//            tdle.addItemToList("przedmiot_nowy","nowa1");
             tdle.checkItem(tdle.getUniqItemId("przemiot","nowa1"));
             tdle.checkItem(tdle.getUniqItemId("przemiot2","nowa1"));
             tdle.checkItem(tdle.getUniqItemId("przemiot4","nowa1"));
             tdle.checkItem(tdle.getUniqItemId("przemiot3","nowa2"));
+            tdle.checkItem(tdle.getUniqItemId("przedmiot_nowy","nowa3"));
             for(String item : tdle.getItems("nowa1")){
                 System.out.println(item);
             }
@@ -139,6 +154,69 @@ public class Runner {
             TestZad8 test = (TestZad8)o;
             System.out.println("boolSQL: "+test.boolSQL+", integerSQL: "+test.integerSQL+", textSQL: "+test.textSQL+
             ", realSQL: "+test.realSQL+", fal: "+test.fal);
+        }
+    }
+
+    private static void zad11(){
+
+
+
+        DoubleValue xv = new DoubleValue(); // zmienna
+        DoubleValue yy = new DoubleValue(); // zmienna
+        DoubleValue aa = new DoubleValue(); // zmienna
+        ClassGenerator cg = new ClassGenerator();
+        // terminale
+        List<NodeFabricInterface> values = new ArrayList<NodeFabricInterface>() {
+            {
+                add(new ConstantValueNodeFabric(1));
+                add(new ConstantValueNodeFabric(2));
+                add(new ConstantValueNodeFabric(5));
+                add(new VariableNodeFabric((ValueInterface) xv, "x"));
+                add(new VariableNodeFabric((ValueInterface) yy, "y"));
+                add(new VariableNodeFabric((ValueInterface) aa, "a"));
+            }
+        };
+
+        // operatory jednoargumentowe
+        List<NodeFabricInterface> unaryO = new ArrayList<NodeFabricInterface>() {
+            {
+                add(new UnaryNodeFabric((x) -> Math.sin(x), "Math.sin"));
+                add(new UnaryNodeFabric((x) -> Math.cos(x), "Math.cos"));
+                add(new UnaryNodeFabric((x) -> Math.exp(x), "Math.exp"));
+            }
+        };
+
+        // operatory dwuargumentowe
+        List<NodeFabricInterface> binaryO = new ArrayList<NodeFabricInterface>() {
+            {
+                add(new BinaryNodeFabric((x, y) -> (x + y), "+"));
+                add(new BinaryNodeFabric((x, y) -> (x - y), "-"));
+                add(new BinaryNodeFabric((x, y) -> (x * y), "*"));
+                add(new BinaryNodeFabric((x, y) -> (x / y), "/"));
+            }
+        };
+
+        Generator g = new Generator();
+        g.setComplexity(3); // im wiecej tym formulki bardziej rozbudowane
+
+        cg.generate("NowaKlasa",g.generate(values, unaryO, binaryO));
+
+        try {
+            Class nowa = Class.forName("NowaKlasa");
+            Object o = nowa.newInstance();
+            Method m = nowa.getMethod("get",double[].class);
+            double[] vars = { 1.0 , 2.0, 3.0 };
+            System.out.println(m.invoke(o,vars));
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+        } catch (InstantiationException e) {
+            e.printStackTrace();
+        } catch (IllegalAccessException e) {
+            e.printStackTrace();
+        } catch (NoSuchMethodException e) {
+            e.printStackTrace();
+        } catch (InvocationTargetException e) {
+            e.printStackTrace();
         }
     }
 }
