@@ -6,13 +6,14 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 import java.util.function.BooleanSupplier;
 
 /**
  * Created by Dariusz on 2016-02-02.
  */
 public class Runner {
-    private static final int TASK_NO = 12;
+    private static final int TASK_NO = 13;
 
     public static void main(String[] args){
         switch(TASK_NO){
@@ -33,6 +34,9 @@ public class Runner {
                 break;
             case 12:
                 zad9();
+                break;
+            case 13:
+                zad13();
                 break;
         }
 
@@ -218,6 +222,103 @@ public class Runner {
         } catch (InvocationTargetException e) {
             e.printStackTrace();
         }
+    }
+
+    private static void zad13(){
+        GeneticProgramming gp = new GeneticProgramming();
+//        gp.setEvaluator(root -> Math.pow(root.getValue(),Double.NEGATIVE_INFINITY));
+//        Node value0 = new Node(0) {
+//            @Override
+//            public double getValue() {
+//                return 0;
+//            }
+//        };
+//        Node value10 = new Node(0){
+//
+//            @Override
+//            public double getValue() {
+//                return 10;
+//            }
+//        };
+//
+//        Node valueNaN = new Node(0) {
+//            @Override
+//            public double getValue() {
+//                return Double.POSITIVE_INFINITY;
+//            }
+//        };
+//
+//        List<NodeInteface> roots = new ArrayList<>();
+//        roots.add(value0);
+//        roots.add(value10);
+//        roots.add(valueNaN);
+//
+//        roots = gp.evalute(roots);
+//        for(NodeInteface root : roots){
+//            System.out.println(root.getValue());
+//        }
+
+
+        DoubleValue xv = new DoubleValue(); // zmienna
+        xv.setValue(10);
+        // terminale
+        List<NodeFabricInterface> values = new ArrayList<NodeFabricInterface>() {
+            {
+                add(new ConstantValueNodeFabric(1));
+                add(new ConstantValueNodeFabric(2));
+                add(new ConstantValueNodeFabric(5));
+                add(new VariableNodeFabric((ValueInterface) xv, "x"));
+            }
+        };
+
+        // operatory jednoargumentowe
+        List<NodeFabricInterface> unaryO = new ArrayList<NodeFabricInterface>() {
+            {
+                add(new UnaryNodeFabric((x) -> Math.sin(x), "Math.sin"));
+                add(new UnaryNodeFabric((x) -> Math.cos(x), "Math.cos"));
+                add(new UnaryNodeFabric((x) -> Math.exp(x), "Math.exp"));
+            }
+        };
+
+        // operatory dwuargumentowe
+        List<NodeFabricInterface> binaryO = new ArrayList<NodeFabricInterface>() {
+            {
+                add(new BinaryNodeFabric((x, y) -> (x + y), "+"));
+                add(new BinaryNodeFabric((x, y) -> (x - y), "-"));
+                add(new BinaryNodeFabric((x, y) -> (x * y), "*"));
+                add(new BinaryNodeFabric((x, y) -> (x / y), "/"));
+            }
+        };
+
+        Generator g = new Generator();
+        g.setComplexity(1); // im wiecej tym formulki bardziej rozbudowane
+
+        NodeInteface root = g.generate(values, unaryO, binaryO);
+        NodeInteface root2 = g.generate(values, unaryO, binaryO);
+//        System.out.println("Old value = "+root.getValue());
+//        Random rand = new Random(System.currentTimeMillis());
+//        NodeInteface newRoot = gp.mutate(root, new BooleanSupplier() {
+//            @Override
+//            public boolean getAsBoolean() {
+//
+//                int val = rand.nextInt(1000);
+//                if(val % 2 == 0){
+//                    return true;
+//                }
+//                else
+//                    return false;
+//            }
+//        },values,unaryO,binaryO);
+//        System.out.println("New value = "+newRoot.getValue());
+
+        System.out.println("Root1 old: "+root.getValue());
+        System.out.println("Root2 old: "+root2.getValue());
+
+        GeneticProgrammingInterface.PairOfNodes pair =  gp.crossover(root,root2);
+
+
+        System.out.println("Root1 new: "+pair.n1.getValue());
+        System.out.println("Root2 new: "+pair.n2.getValue());
     }
 }
 
